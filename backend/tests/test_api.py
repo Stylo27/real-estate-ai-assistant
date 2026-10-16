@@ -9,12 +9,16 @@ FACTS = {
 }
 
 
-def test_draft_that_fails_validation_twice_returns_a_generic_error_with_request_id():
-    app.dependency_overrides[get_llm] = lambda: MockProvider([{"headline": "Act fast: dream home"}])
+def post_draft(llm_factory):
+    app.dependency_overrides[get_llm] = llm_factory
     try:
-        response = TestClient(app).post("/api/drafts", json=FACTS)
+        return TestClient(app).post("/api/drafts", json=FACTS)
     finally:
         app.dependency_overrides.clear()
+
+
+def test_draft_that_fails_validation_twice_returns_a_generic_error_with_request_id():
+    response = post_draft(lambda: MockProvider([{"headline": "Act fast: dream home"}]))
 
     assert response.status_code == 502
     body = response.json()
@@ -22,18 +26,19 @@ def test_draft_that_fails_validation_twice_returns_a_generic_error_with_request_
     assert body["request_id"] and body["request_id"] == response.headers["X-Request-ID"]
 
 
-class FailingProvider(MockProvider):
-    def generate(self, system, user, schema):
-        raise RuntimeError("vendor says: invalid x-api-key sk-secret")
+def test_provider_failure_returns_the_generic_error_without_the_vendor_message():
+    response = post_draft(lambda: MockProvider([RuntimeError("vendor says: invalid x-api-key sk-secret")]))
+
+    assert response.status_code == 502
+    assert "sk-secret" not in response.text
 
 
 def test_unexpected_error_returns_a_generic_500_without_internals():
-    app.dependency_overrides[get_llm] = lambda: FailingProvider()
-    try:
-        response = TestClient(app).post("/api/drafts", json=FACTS)
-    finally:
-        app.dependency_overrides.clear()
+    def broken():
+        raise RuntimeError("internal detail: /srv/app/secrets.py")
+
+    response = post_draft(broken)
 
     assert response.status_code == 500
-    assert "sk-secret" not in response.text and "Traceback" not in response.text
+    assert "internal detail" not in response.text and "Traceback" not in response.text
     assert response.json()["request_id"] == response.headers["X-Request-ID"]

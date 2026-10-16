@@ -102,3 +102,24 @@ def test_two_invalid_responses_raise_and_return_no_draft(caplog):
     assert "highlights" in retry_user
     lines = [json.loads(r.getMessage()) for r in caplog.records if r.name == "app.llm_calls"]
     assert [(line["attempt"], line["outcome"]) for line in lines] == [(1, "invalid"), (2, "invalid")]
+
+
+@pytest.mark.parametrize(("headline", "calls"), [
+    ("A Must-See flat in Prenzlauer Berg", 2),  # case and hyphen variants of "must see" still count
+    ("Flat that won’t last long", 2),  # typographic apostrophe
+    ("Flat with compact fast-charging parking", 1),  # "act fast" only as whole words
+])
+def test_banned_phrases_match_whole_words_in_any_case(headline, calls):
+    llm = MockProvider([VALID_RESPONSE | {"headline": headline}, VALID_RESPONSE])
+
+    generate_draft(llm, REQUEST)
+
+    assert len(llm.calls) == calls
+
+
+def test_empty_text_is_a_violation():
+    llm = MockProvider([VALID_RESPONSE | {"highlights": ["Balcony", " ", "Elevator"]}, VALID_RESPONSE])
+
+    generate_draft(llm, REQUEST)
+
+    assert len(llm.calls) == 2

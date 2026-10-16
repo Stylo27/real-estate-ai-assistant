@@ -3,6 +3,8 @@
 import html
 import json
 import logging
+import re
+import unicodedata
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -118,35 +120,49 @@ class DraftGenerationError(Exception):
     """The model did not produce a valid Draft within the allowed attempts."""
 
 
-def find_violations(data: dict, guide: BrandVoiceGuide = GUIDE) -> list[str]:
+def normalize(text: str) -> str:
+    return unicodedata.normalize("NFC", text).casefold().replace("’", "'")
+
+
+# Whole words only, so "act fast" doesn't flag "fast-charging"; any spaces or hyphens between words, so "Must-see" counts.
+BANNED = {
+    phrase: re.compile(r"\b" + r"[\s-]+".join(map(re.escape, normalize(phrase).split())) + r"\b")
+    for phrase in GUIDE.banned_phrases
+}
+
+
+def find_violations(data: dict) -> list[str]:
     """Human-readable reasons the model output is not a valid Draft; empty if it is. Sent back to the model on retry."""
     try:
         draft = Draft.model_validate(data)
     except ValidationError as e:
         return [f"{'.'.join(map(str, err['loc'])) or 'output'}: {err['msg']}" for err in e.errors()]
     violations = []
+    if not all(text.strip() for text in [draft.headline, draft.description, *draft.highlights]):
+        violations.append("headline, description and highlights must not be empty")
     if not MIN_HIGHLIGHTS <= len(draft.highlights) <= MAX_HIGHLIGHTS:
         violations.append(f"highlights: give {MIN_HIGHLIGHTS} to {MAX_HIGHLIGHTS} items, not {len(draft.highlights)}")
-    if len(draft.headline) > guide.headline_max_chars:
-        violations.append(f"headline: {len(draft.headline)} characters, the limit is {guide.headline_max_chars}")
-    if len(draft.description) > guide.description_max_chars:
-        violations.append(f"description: {len(draft.description)} characters, the limit is {guide.description_max_chars}")
-    # Fields joined by newlines so a phrase can't match across two of them; typographic apostrophes count too.
-    text = "\n".join([draft.headline, draft.description, *draft.highlights]).casefold().replace("’", "'")
-    violations += [f'banned phrase used: "{phrase}"' for phrase in guide.banned_phrases if phrase.casefold() in text]
+    if len(draft.headline) > GUIDE.headline_max_chars:
+        violations.append(f"headline: {len(draft.headline)} characters, the limit is {GUIDE.headline_max_chars}")
+    if len(draft.description) > GUIDE.description_max_chars:
+        violations.append(f"description: {len(draft.description)} characters, the limit is {GUIDE.description_max_chars}")
+    # Each field checked on its own so a phrase can't match across two of them.
+    texts = [normalize(text) for text in [draft.headline, draft.description, *draft.highlights]]
+    violations += [f'banned phrase used: "{phrase}"' for phrase, rx in BANNED.items() if any(map(rx.search, texts))]
     return violations
 
 
 def generate_draft(llm: LLMProvider, request: DraftRequest, request_id: str = "-") -> Draft:
-    """Fails closed: output that breaks the schema or the Brand Voice Guide is retried once, then rejected."""
-    user = build_user_prompt(request)
+    """Fails closed: output that breaks the schema or the Brand Voice Guide is retried once, then rejected.
+    A provider failure is not retried and raises DraftGenerationError too, so the vendor's message never surfaces."""
+    user = prompt = build_user_prompt(request)
     for attempt in range(1, ATTEMPTS + 1):
         line = {"request_id": request_id, "model": llm.model, "attempt": attempt}
         try:
             result = llm.generate(SYSTEM_PROMPT, user, Draft.model_json_schema())
-        except Exception:
+        except Exception as e:
             call_log.info(json.dumps(line | {"outcome": "provider_error"}))
-            raise
+            raise DraftGenerationError("the provider call failed") from e
         usage = result.usage
         line |= {"input_tokens": usage.input_tokens, "output_tokens": usage.output_tokens, "latency_ms": usage.latency_ms}
         if not (violations := find_violations(result.data)):
@@ -154,7 +170,7 @@ def generate_draft(llm: LLMProvider, request: DraftRequest, request_id: str = "-
             return Draft.model_validate(result.data)
         call_log.info(json.dumps(line | {"outcome": "invalid"}))
         user = (
-            f"{build_user_prompt(request)}\n\n"
+            f"{prompt}\n\n"
             f"Your previous answer was rejected for these reasons. Write a new one that fixes them:\n{bullets(violations)}"
         )
     raise DraftGenerationError(f"no valid Draft after {ATTEMPTS} attempts")

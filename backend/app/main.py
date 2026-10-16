@@ -18,7 +18,7 @@ app = FastAPI(title="Listing Assistant", docs_url=None, redoc_url=None, openapi_
 _llm = make_llm()
 
 
-def error(request: Request, status: int, detail: str) -> JSONResponse:
+def error_response(request: Request, status: int, detail: str) -> JSONResponse:
     """Error bodies carry only a fixed message and the request id: no stack traces or vendor messages."""
     return JSONResponse({"detail": detail, "request_id": request.state.request_id}, status_code=status)
 
@@ -30,14 +30,15 @@ async def assign_request_id(request: Request, call_next):
         response = await call_next(request)
     except Exception:  # Caught here, not in an exception handler, so the 500 also gets the X-Request-ID header.
         log.exception("unhandled error, request_id=%s", request.state.request_id)
-        response = error(request, 500, "Something went wrong. Please try again.")
+        response = error_response(request, 500, "Something went wrong. Please try again.")
     response.headers["X-Request-ID"] = request.state.request_id
     return response
 
 
 @app.exception_handler(DraftGenerationError)
 def draft_generation_failed(request: Request, exc: DraftGenerationError) -> JSONResponse:
-    return error(request, 502, "Could not generate a draft. Please try again.")
+    log.warning("could not generate a draft, request_id=%s", request.state.request_id, exc_info=exc.__cause__)
+    return error_response(request, 502, "Could not generate a draft. Please try again.")
 
 
 def get_llm() -> LLMProvider:

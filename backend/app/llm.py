@@ -74,17 +74,19 @@ DEMO_RESPONSE = {
 
 
 class MockProvider:
-    """Returns scripted responses in order; the last one repeats once the script runs out."""
+    """Returns scripted responses in order; the last one repeats once the script runs out; a scripted exception is raised."""
 
     model = "mock"
 
-    def __init__(self, responses: list[dict[str, Any]] | None = None):
+    def __init__(self, responses: list[dict[str, Any] | Exception] | None = None):
         self.responses = list(responses or [DEMO_RESPONSE])
         self.calls: list[tuple[str, str]] = []
 
     def generate(self, system: str, user: str, schema: dict[str, Any]) -> LLMResult:
         self.calls.append((system, user))
         data = self.responses.pop(0) if len(self.responses) > 1 else self.responses[0]
+        if isinstance(data, Exception):
+            raise data
         return LLMResult(data=data, usage=Usage(input_tokens=0, output_tokens=0, latency_ms=0))
 
 
