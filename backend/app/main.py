@@ -3,11 +3,11 @@
 import logging
 import uuid
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from app.drafting import Draft, DraftGenerationError, DraftRequest, generate_draft
-from app.listings import LISTINGS, Listing
+from app.listings import LISTINGS, ApprovedListing, Listing, save_listing
 from app.llm import LLMProvider, make_llm
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
@@ -53,6 +53,23 @@ def health() -> dict[str, str]:
 @app.get("/api/listings")
 def list_listings() -> list[Listing]:
     return list(LISTINGS.values())
+
+
+@app.get("/api/listings/{listing_id}")
+def get_listing(listing_id: str) -> Listing:
+    if listing_id not in LISTINGS:
+        raise HTTPException(404, "Listing not found.")
+    return LISTINGS[listing_id]
+
+
+@app.post("/api/listings", status_code=201)
+def create_listing(body: ApprovedListing) -> Listing:
+    return save_listing(body)
+
+
+@app.put("/api/listings/{listing_id}")
+def update_listing(body: ApprovedListing, listing: Listing = Depends(get_listing)) -> Listing:
+    return save_listing(body, listing.id)
 
 
 @app.post("/api/drafts")

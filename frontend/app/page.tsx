@@ -27,16 +27,18 @@ export default function ListingsPage() {
       {!listings && !failed && <p aria-live="polite">Loading…</p>}
       <ul className="listings">
         {listings?.map((l) => (
-          <li key={l.id} className="card">
-            <strong>
-              {l.city} · {l.district}
-            </strong>
-            <span>
-              {l.deal_type === "rent" ? "For rent" : "For sale"} · {formatPrice(l)}
-            </span>
-            <span className={l.listing_description ? "badge done" : "badge todo"}>
-              {l.listing_description ? "Has description" : "Needs description"}
-            </span>
+          <li key={l.id}>
+            <Link className="card" href={`/listings/${encodeURIComponent(l.id)}`}>
+              <strong>
+                {l.city} · {l.district}
+              </strong>
+              <span>
+                {l.deal_type === "rent" ? "For rent" : "For sale"} · {formatPrice(l)}
+              </span>
+              <span className={l.listing_description ? "badge done" : "badge todo"}>
+                {l.listing_description ? "Has description" : "Needs description"}
+              </span>
+            </Link>
           </li>
         ))}
       </ul>
