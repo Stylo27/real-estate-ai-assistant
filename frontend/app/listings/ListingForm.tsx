@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { FEATURES, fieldErrors, type Draft, type Feature, type Listing } from "../api";
+import { FEATURES, fieldErrors, type Draft, type Feature, type Listing, type ListingDescription } from "../api";
 
 const NUMBERS = ["bedrooms", "bathrooms", "size_m2", "price"] as const;
 
@@ -36,7 +36,7 @@ function toForm(l: Listing): typeof INITIAL {
 }
 
 // What lands on the clipboard: plain text, ready to paste into a portal.
-const asText = (d: Draft) => [d.headline, d.description, d.highlights.map((h) => `• ${h}`).join("\n")].join("\n\n");
+const asText = (d: ListingDescription) => [d.headline, d.description, d.highlights.map((h) => `• ${h}`).join("\n")].join("\n\n");
 
 /** One form for new and existing Listings: Unit facts → Draft → edit → Approve into the Listing Description. */
 export default function ListingForm({ listing }: { listing?: Listing }) {
@@ -45,7 +45,10 @@ export default function ListingForm({ listing }: { listing?: Listing }) {
   const [features, setFeatures] = useState<Feature[]>(listing?.features ?? []);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [draft, setDraft] = useState<Draft | null>(null);
-  const [approved, setApproved] = useState(listing?.listing_description ?? null);
+  // The facts the Draft was generated from: Approve saves these, so the Listing never contradicts its description.
+  const [draftFacts, setDraftFacts] = useState<Record<string, unknown> | null>(null);
+  const [saved, setSaved] = useState(listing);
+  const approved = saved?.listing_description;
   const [busy, setBusy] = useState<"generate" | "approve" | null>(null);
   const [copyStatus, setCopyStatus] = useState("");
 
@@ -75,22 +78,24 @@ export default function ListingForm({ listing }: { listing?: Listing }) {
     return body;
   }
 
-  // Returns the response body, or undefined after showing the error. Failure messages go under `errorKey`.
-  async function send(action: "generate" | "approve", url: string, method: string, body: object, errorKey: string) {
+  // Returns the response body, or undefined after showing the error. Failure messages go under the `action` key.
+  async function send(action: "generate" | "approve", url: string, method: string, body: object) {
     setBusy(action);
     setErrors({});
     try {
       const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (res.ok) return await res.json();
       if (res.status === 422) setErrors(fieldErrors(await res.json()));
+      // The store is in memory, so a Listing created before a backend restart is gone.
+      else if (res.status === 404) setErrors({ [action]: "This Listing no longer exists. Go back to the Listings." });
       else {
         // The entered facts and Draft stay on screen so the Agent can simply retry.
         const ref = res.headers.get("X-Request-ID");
         const what = action === "generate" ? "generate a draft" : "approve the draft";
-        setErrors({ [errorKey]: `Could not ${what}. Please try again.${ref ? ` (Reference: ${ref})` : ""}` });
+        setErrors({ [action]: `Could not ${what}. Please try again.${ref ? ` (Reference: ${ref})` : ""}` });
       }
     } catch {
-      setErrors({ [errorKey]: "Could not reach the server. Please try again." });
+      setErrors({ [action]: "Could not reach the server. Please try again." });
     } finally {
       setBusy(null);
     }
@@ -98,23 +103,28 @@ export default function ListingForm({ listing }: { listing?: Listing }) {
 
   async function generate(e?: FormEvent) {
     e?.preventDefault();
-    const result = await send("generate", "/api/drafts", "POST", factsBody(), "form");
-    if (result) setDraft(result);
+    const body = factsBody();
+    const result = await send("generate", "/api/drafts", "POST", body);
+    if (!result) return;
+    setDraft(result);
+    setDraftFacts(body);
   }
 
   async function approve() {
-    if (!draft) return;
-    const body = factsBody();
-    delete body.language; // Not a Listing fact; it only steers the Draft.
-    body.listing_description = { ...draft, highlights: draft.highlights.map((h) => h.trim()).filter(Boolean) };
-    const saved: Listing | undefined = listing
-      ? await send("approve", `/api/listings/${encodeURIComponent(listing.id)}`, "PUT", body, "approve")
-      : await send("approve", "/api/listings", "POST", body, "approve");
-    if (!saved) return;
+    if (!draft || !draftFacts) return;
+    const body = {
+      ...draftFacts,
+      language: undefined, // Not a Listing fact; it only steers the Draft.
+      listing_description: { ...draft, highlights: draft.highlights.map((h) => h.trim()).filter(Boolean) },
+    };
+    const result: Listing | undefined = saved
+      ? await send("approve", `/api/listings/${encodeURIComponent(saved.id)}`, "PUT", body)
+      : await send("approve", "/api/listings", "POST", body);
+    if (!result) return;
     setDraft(null);
-    setApproved(saved.listing_description);
+    setSaved(result);
     setCopyStatus("");
-    if (!listing) router.replace(`/listings/${encodeURIComponent(saved.id)}`);
+    if (!saved) router.replace(`/listings/${encodeURIComponent(result.id)}`);
   }
 
   async function copy() {
@@ -129,7 +139,7 @@ export default function ListingForm({ listing }: { listing?: Listing }) {
 
   return (
     <>
-      <h1>{listing ? `${listing.city} · ${listing.district}` : "New listing"}</h1>
+      <h1>{saved ? `${saved.city} · ${saved.district}` : "New listing"}</h1>
 
       {approved && (
         <section className="card approved" aria-labelledby="approved-title">
@@ -237,6 +247,7 @@ export default function ListingForm({ listing }: { listing?: Listing }) {
           {error("language")}
         </div>
         {error("form")}
+        {!draft && error("generate")}
         <button type="submit" disabled={!!busy}>
           {busy === "generate" ? "Generating…" : "Generate draft"}
         </button>
@@ -278,6 +289,13 @@ export default function ListingForm({ listing }: { listing?: Listing }) {
               />
               {error("listing_description.highlights")}
             </div>
+            {JSON.stringify(factsBody()) !== JSON.stringify(draftFacts) && (
+              <p className="hint">
+                The facts changed after this Draft was generated. Approve saves the facts it was generated from;
+                Regenerate to use the new ones.
+              </p>
+            )}
+            {error("generate")}
             {error("approve")}
             <div className="actions">
               <button type="button" onClick={approve} disabled={!!busy}>

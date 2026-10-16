@@ -15,6 +15,7 @@ export const FEATURES = {
 export type Feature = keyof typeof FEATURES;
 
 export type Draft = { headline: string; description: string; highlights: string[] };
+export type ListingDescription = Draft; // A Draft the Agent has approved.
 
 export type Listing = {
   id: string;
@@ -28,7 +29,7 @@ export type Listing = {
   currency: string;
   features: Feature[];
   notes: string;
-  listing_description: Draft | null;
+  listing_description: ListingDescription | null;
 };
 
 // FastAPI 422 body: {detail: [{loc: ["body", field, ...], msg}]} → {field: msg}. List indexes are dropped,
