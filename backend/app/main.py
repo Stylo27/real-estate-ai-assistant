@@ -1,6 +1,7 @@
 """API layer: HTTP routes. Request bodies are validated by the domain models (strict, extra fields forbidden)."""
 
 import logging
+import os
 import uuid
 
 from fastapi import Depends, FastAPI, HTTPException, Request
@@ -13,7 +14,14 @@ from app.llm import LLMProvider, make_llm
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
 log = logging.getLogger(__name__)
 
-app = FastAPI(title="Listing Assistant", docs_url=None, redoc_url=None, openapi_url=None)
+# Interactive docs only in dev mode, under /api so they also work through the UI's proxy.
+_dev = os.environ.get("DEV_MODE", "").strip().lower() in ("1", "true")
+app = FastAPI(
+    title="Listing Assistant",
+    docs_url="/api/docs" if _dev else None,
+    redoc_url=None,
+    openapi_url="/api/openapi.json" if _dev else None,
+)
 
 _llm = make_llm()
 
@@ -32,6 +40,7 @@ async def assign_request_id(request: Request, call_next):
         log.exception("unhandled error, request_id=%s", request.state.request_id)
         response = error_response(request, 500, "Something went wrong. Please try again.")
     response.headers["X-Request-ID"] = request.state.request_id
+    response.headers["X-Content-Type-Options"] = "nosniff"
     return response
 
 
