@@ -95,3 +95,10 @@ def test_blank_or_too_long_listing_description_is_rejected_field_by_field():
     assert {tuple(e["loc"]) for e in response.json()["detail"]} == {
         ("body", "listing_description", "headline"), ("body", "listing_description", "description"),
     }
+
+
+def test_interactive_api_docs_are_not_served_outside_dev_mode():
+    client = TestClient(app)
+
+    assert client.get("/api/docs").status_code == 404
+    assert client.get("/api/openapi.json").status_code == 404

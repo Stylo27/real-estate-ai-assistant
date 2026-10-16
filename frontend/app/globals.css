@@ -30,10 +30,12 @@ main {
 }
 
 .site-header {
-  padding: 0.75rem 1rem;
+  padding: 0 1rem;
   background: var(--accent);
 }
 .site-header a {
+  display: inline-block;
+  padding: 0.75rem 0; /* 48px touch target */
   color: #fff;
   font-weight: 600;
   text-decoration: none;
