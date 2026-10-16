@@ -1,0 +1,56 @@
+[
+  {
+    "id": "berlin-prenzlauer-berg",
+    "deal_type": "rent", "bedrooms": 2, "bathrooms": 1, "size_m2": 64,
+    "city": "Berlin", "district": "Prenzlauer Berg", "price": 1850, "currency": "EUR",
+    "features": ["balcony", "elevator"], "notes": "Courtyard side, renovated kitchen.",
+    "listing_description": {
+      "headline": "Two-bedroom flat with balcony in Prenzlauer Berg",
+      "description": "A 64 m² flat on the quiet courtyard side, with a renovated kitchen and a balcony. Lift in the building.",
+      "highlights": ["Balcony", "Elevator", "Renovated kitchen"]
+    }
+  },
+  {
+    "id": "munich-schwabing",
+    "deal_type": "sale", "bedrooms": 3, "bathrooms": 2, "size_m2": 98,
+    "city": "Munich", "district": "Schwabing", "price": 1150000, "currency": "EUR",
+    "features": ["terrace", "parking", "new_build"], "notes": "",
+    "listing_description": null
+  },
+  {
+    "id": "warsaw-mokotow",
+    "deal_type": "rent", "bedrooms": 1, "bathrooms": 1, "size_m2": 42,
+    "city": "Warsaw", "district": "Mokotów", "price": 4200, "currency": "PLN",
+    "features": ["furnished", "pets_allowed"], "notes": "Five minutes to the metro.",
+    "listing_description": {
+      "headline": "Umeblowane mieszkanie przy metrze na Mokotowie",
+      "description": "Mieszkanie 42 m², w pełni umeblowane, pięć minut od stacji metra. Zwierzęta mile widziane.",
+      "highlights": ["Umeblowane", "Zwierzęta akceptowane", "Blisko metra"]
+    }
+  },
+  {
+    "id": "krakow-kazimierz",
+    "deal_type": "sale", "bedrooms": 2, "bathrooms": 1, "size_m2": 55,
+    "city": "Kraków", "district": "Kazimierz", "price": 890000, "currency": "PLN",
+    "features": ["balcony", "storage"], "notes": "",
+    "listing_description": null
+  },
+  {
+    "id": "vienna-leopoldstadt",
+    "deal_type": "rent", "bedrooms": 3, "bathrooms": 1, "size_m2": 81,
+    "city": "Vienna", "district": "Leopoldstadt", "price": 1690, "currency": "EUR",
+    "features": ["elevator", "garden"], "notes": "Shared garden in the courtyard.",
+    "listing_description": null
+  },
+  {
+    "id": "london-hackney",
+    "deal_type": "rent", "bedrooms": 2, "bathrooms": 2, "size_m2": 70,
+    "city": "London", "district": "Hackney", "price": 2600, "currency": "GBP",
+    "features": ["air_conditioning", "elevator"], "notes": "",
+    "listing_description": {
+      "headline": "Two-bed, two-bath flat in Hackney",
+      "description": "A 70 m² flat with two bathrooms, air conditioning and a lift.",
+      "highlights": ["Two bathrooms", "Air conditioning", "Elevator"]
+    }
+  }
+]
