@@ -1,0 +1,10 @@
+*.docx
+.env
+.env.*
+!.env.example
+node_modules/
+.next/
+__pycache__/
+.venv/
+.pytest_cache/
+.DS_Store
