@@ -46,6 +46,7 @@ export default function NewListingPage() {
     e.preventDefault();
     setLoading(true);
     setErrors({});
+    setDraft(null);
     const body: Record<string, unknown> = { ...facts, features };
     // Empty number fields are left out so the backend reports "Field required".
     for (const n of NUMBERS) body[n] = facts[n] === "" ? undefined : Number(facts[n]);
@@ -140,7 +141,7 @@ export default function NewListingPage() {
         </fieldset>
         <div className="field">
           <label htmlFor="notes">Notes ({facts.notes.length}/300)</label>
-          <textarea rows={3} {...bind("notes")} />
+          <textarea rows={3} maxLength={300} {...bind("notes")} />
           {error("notes")}
         </div>
         <div className="field">

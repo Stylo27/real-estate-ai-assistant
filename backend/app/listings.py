@@ -3,12 +3,16 @@
 import json
 from pathlib import Path
 
-from app.drafting import Draft, UnitFacts
+from app.drafting import Draft, ListingFacts
 
 
-class Listing(UnitFacts):
+class ListingDescription(Draft):
+    """A Draft the Agent has approved."""
+
+
+class Listing(ListingFacts):
     id: str
-    listing_description: Draft | None = None  # the approved Draft
+    listing_description: ListingDescription | None = None
 
 
 _seed = json.loads((Path(__file__).parent / "seed_listings.json").read_text())
