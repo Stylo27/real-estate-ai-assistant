@@ -57,7 +57,11 @@ export default function NewListingPage() {
         body: JSON.stringify(body),
       });
       if (res.status === 422) setErrors(fieldErrors(await res.json()));
-      else if (!res.ok) setErrors({ form: "Could not generate a draft. Please try again." });
+      else if (!res.ok) {
+        // The entered facts stay in the form so the Agent can simply retry.
+        const ref = res.headers.get("X-Request-ID");
+        setErrors({ form: `Could not generate a draft. Please try again.${ref ? ` (Reference: ${ref})` : ""}` });
+      }
       else setDraft(await res.json());
     } catch {
       setErrors({ form: "Could not reach the server. Please try again." });
