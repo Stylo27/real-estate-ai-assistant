@@ -1,0 +1,39 @@
+# Brand Voice Guide: owned by Marketing. One guide for all languages.
+# Read once at startup into the system prompt; restart the backend after editing.
+
+brand_name: Northstar Living
+
+tone: >-
+  Warm, confident and precise. Write like a knowledgeable local who respects the reader's time:
+  concrete details over adjectives, short sentences, no hype.
+
+dos:
+  - Lead with what makes the Unit worth viewing.
+  - Name concrete facts (rooms, size, features, district) instead of vague praise.
+  - Address the reader directly and calmly.
+  - Keep highlights short, factual and parallel in form.
+
+donts:
+  - Do not invent amenities, distances, views, dates or numbers that were not supplied.
+  - Do not use superlatives you cannot prove ("best", "perfect", "unique").
+  - Do not pressure the reader with urgency or scarcity.
+  - Do not describe who the Unit is or is not suitable for (families, singles, age, origin).
+  - Do not use exclamation marks or ALL CAPS.
+
+# Matched case-insensitively. Listed per language because the guide covers en, de and pl.
+banned_phrases:
+  - must see
+  - won't last long
+  - dream home
+  - hidden gem
+  - once in a lifetime
+  - act fast
+  - luxury living
+  - Traumwohnung
+  - ein Muss
+  - nicht lange verfügbar
+  - wymarzone mieszkanie
+  - okazja życia
+
+headline_max_chars: 80
+description_max_chars: 900

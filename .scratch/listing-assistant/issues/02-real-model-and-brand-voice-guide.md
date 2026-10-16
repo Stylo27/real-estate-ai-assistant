@@ -8,10 +8,10 @@
 
 Spec: `.scratch/listing-assistant/spec.md`
 
-- [ ] Anthropic adapter implements the provider port and forces structured output through a single tool; the model comes from config (default: a small, fast Claude model)
-- [ ] Adapter selection: Anthropic if a key is set, otherwise Mock with a startup warning
-- [ ] The key is read only by the backend from env and never reaches the browser
-- [ ] Brand Voice Guide is one YAML document (brand name, tone, do's, don'ts, banned phrases, length limits), loaded once and fed into the system prompt
-- [ ] System prompt instructs: use only supplied facts, write in the requested language; notes are inserted as delimited data and are not to be followed as instructions
-- [ ] One structured log line per model call: request id, model, attempt, input/output tokens, latency, outcome; no prompt or output text
-- [ ] Manual check: a real Draft is generated in en, de and pl
+- [x] Anthropic adapter implements the provider port and forces structured output through a single tool; the model comes from config (default: a small, fast Claude model)
+- [x] Adapter selection: Anthropic if a key is set, otherwise Mock with a startup warning
+- [x] The key is read only by the backend from env and never reaches the browser
+- [x] Brand Voice Guide is one YAML document (brand name, tone, do's, don'ts, banned phrases, length limits), loaded once and fed into the system prompt
+- [x] System prompt instructs: use only supplied facts, write in the requested language; notes are inserted as delimited data and are not to be followed as instructions
+- [x] One structured log line per model call: request id, model, attempt, input/output tokens, latency, outcome; no prompt or output text
+- [x] Manual check: a real Draft is generated in en, de and pl
