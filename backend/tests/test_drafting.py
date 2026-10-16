@@ -1,7 +1,9 @@
 import json
 import logging
 
-from app.drafting import GUIDE, Draft, DraftRequest, generate_draft
+import pytest
+
+from app.drafting import GUIDE, Draft, DraftGenerationError, DraftRequest, generate_draft
 from app.llm import MockProvider
 
 REQUEST = DraftRequest(
@@ -75,3 +77,28 @@ def test_notes_cannot_close_their_delimiter():
     [(_, user)] = llm.calls
     assert user.count("<notes>") == 1 and user.count("</notes>") == 1
     assert user.endswith("</notes>")
+
+
+def test_brand_voice_violation_is_retried_with_the_violations():
+    invalid = VALID_RESPONSE | {"headline": "Your Dream Home in Prenzlauer Berg"}
+    llm = MockProvider([invalid, VALID_RESPONSE])
+
+    draft = generate_draft(llm, REQUEST)
+
+    assert draft.headline == VALID_RESPONSE["headline"]
+    [_, (_, retry_user)] = llm.calls
+    assert "dream home" in retry_user
+
+
+def test_two_invalid_responses_raise_and_return_no_draft(caplog):
+    missing_highlights = {"headline": "Flat in Prenzlauer Berg", "description": "A 64 m² flat."}
+    too_long = VALID_RESPONSE | {"headline": "x" * (GUIDE.headline_max_chars + 1)}
+    llm = MockProvider([missing_highlights, too_long])
+
+    with caplog.at_level(logging.INFO, logger="app.llm_calls"), pytest.raises(DraftGenerationError):
+        generate_draft(llm, REQUEST)
+
+    [_, (_, retry_user)] = llm.calls
+    assert "highlights" in retry_user
+    lines = [json.loads(r.getMessage()) for r in caplog.records if r.name == "app.llm_calls"]
+    assert [(line["attempt"], line["outcome"]) for line in lines] == [(1, "invalid"), (2, "invalid")]
