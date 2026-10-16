@@ -15,12 +15,12 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message
 log = logging.getLogger(__name__)
 
 # Interactive docs only in dev mode, under /api so they also work through the UI's proxy.
-_dev = os.environ.get("DEV_MODE", "").strip().lower() in ("1", "true")
+_dev_mode = os.environ.get("DEV_MODE", "").strip().lower() in ("1", "true")
 app = FastAPI(
     title="Listing Assistant",
-    docs_url="/api/docs" if _dev else None,
+    docs_url="/api/docs" if _dev_mode else None,
     redoc_url=None,
-    openapi_url="/api/openapi.json" if _dev else None,
+    openapi_url="/api/openapi.json" if _dev_mode else None,
 )
 
 _llm = make_llm()

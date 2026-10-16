@@ -8,10 +8,10 @@
 
 Spec: `.scratch/listing-assistant/spec.md`
 
-- [ ] Basic security headers on the UI responses; interactive API docs disabled unless dev mode is on
-- [ ] Verified at phone and desktop widths; touch targets and keyboard use are reasonable
-- [ ] README: how to run (one command, plus a manual fallback without Docker), which feature is the real AI one and why (two sentences), what is mocked, the mock fallback when no key is set
-- [ ] README: OWASP Top 10:2025, one line per category, with at least A01 and A06 tied to `docs/architecture.md`
-- [ ] README: "With more time", top three next steps in priority order with reasons (PII redaction first)
-- [ ] `docs/prompting-log.md` has 3–4 representative prompts, including at least one rejection or correction with the reason
-- [ ] Clean-checkout run verified: clone, copy the example env, one command, the app works
+- [x] Basic security headers on the UI responses; interactive API docs disabled unless dev mode is on
+- [x] Verified at phone and desktop widths; touch targets and keyboard use are reasonable
+- [x] README: how to run (one command, plus a manual fallback without Docker), which feature is the real AI one and why (two sentences), what is mocked, the mock fallback when no key is set
+- [x] README: OWASP Top 10:2025, one line per category, with at least A01 and A06 tied to `docs/architecture.md`
+- [x] README: "With more time", top three next steps in priority order with reasons (PII redaction first)
+- [x] `docs/prompting-log.md` has 3–4 representative prompts, including at least one rejection or correction with the reason
+- [x] Clean-checkout run verified: clone, copy the example env, one command, the app works (verified on the mock provider; the `.env` copy was blocked by the local Claude deny rule, so the run used no `.env`, which is equivalent since every example value is empty or a default)
