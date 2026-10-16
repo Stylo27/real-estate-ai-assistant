@@ -8,10 +8,10 @@
 
 Spec: `.scratch/listing-assistant/spec.md`
 
-- [ ] Validator checks the schema (fields, types, highlight count) and Brand Voice Guide rules (banned phrases case-insensitive, headline and description length limits), returning human-readable violations
-- [ ] On violation the Draft Service calls the model once more with the violations included; a second failure raises a domain error and returns no Draft
-- [ ] Global error handling: domain error → generic "could not generate a draft" with an upstream-failure status; validation → 422; anything else → generic 500; every response carries a request id; no stack traces or vendor messages
-- [ ] Validation outcome and attempt number appear in the per-call log line
+- [x] Validator checks the schema (fields, types, highlight count) and Brand Voice Guide rules (banned phrases case-insensitive, headline and description length limits), returning human-readable violations
+- [x] On violation the Draft Service calls the model once more with the violations included; a second failure raises a domain error and returns no Draft
+- [x] Global error handling: domain error → generic "could not generate a draft" with an upstream-failure status; validation → 422; anything else → generic 500; every response carries a request id; no stack traces or vendor messages
+- [x] Validation outcome and attempt number appear in the per-call log line
 - [ ] UI shows the generic error message and keeps the Agent's entered facts
-- [ ] pytest via the Draft Service with the mock provider: violation → retry includes violations → valid Draft; two violations → domain error
-- [ ] pytest via the HTTP test client with the provider overridden by Mock: two failures → generic error with request id, no internal details
+- [x] pytest via the Draft Service with the mock provider: violation → retry includes violations → valid Draft; two violations → domain error
+- [x] pytest via the HTTP test client with the provider overridden by Mock: two failures → generic error with request id, no internal details
