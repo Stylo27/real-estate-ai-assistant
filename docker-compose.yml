@@ -1,0 +1,16 @@
+services:
+  backend:
+    build: ./backend
+    env_file:
+      - path: .env
+        required: false
+    # Not published: the browser reaches the API only through the UI's /api proxy.
+    expose:
+      - "8000"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "${UI_PORT:-3000}:3000"
+    depends_on:
+      - backend
