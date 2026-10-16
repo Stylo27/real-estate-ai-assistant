@@ -1,5 +1,5 @@
 # Brand Voice Guide: owned by Marketing. One guide for all languages.
-# Read once at startup by the prompt builder (and the validator); restart the backend after editing.
+# Read once at startup into the system prompt; restart the backend after editing.
 
 brand_name: Northstar Living
 

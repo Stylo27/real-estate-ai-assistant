@@ -57,7 +57,6 @@ PROMPT_FACTS = {
 }
 
 
-
 class BrandVoiceGuide(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

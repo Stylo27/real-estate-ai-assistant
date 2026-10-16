@@ -17,7 +17,7 @@ _llm = make_llm()
 
 
 @app.middleware("http")
-async def request_id(request: Request, call_next):
+async def assign_request_id(request: Request, call_next):
     request.state.request_id = uuid.uuid4().hex
     response = await call_next(request)
     response.headers["X-Request-ID"] = request.state.request_id

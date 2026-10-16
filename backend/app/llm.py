@@ -57,11 +57,10 @@ class AnthropicProvider:
             }],
         )
         latency_ms = round((time.perf_counter() - start) * 1000)
-        tool_use = next((block for block in response.content if block.type == "tool_use"), None)
-        if tool_use is None:
-            raise RuntimeError(f"Model did not call {TOOL_NAME} (stop_reason={response.stop_reason})")
+        # No tool call yields {}, so the domain sees an invalid output (tokens still logged), not an upstream error.
+        data = next((block.input for block in response.content if block.type == "tool_use"), {})
         usage = Usage(response.usage.input_tokens, response.usage.output_tokens, latency_ms)
-        return LLMResult(data=tool_use.input, usage=usage)
+        return LLMResult(data=data, usage=usage)
 
 
 DEMO_RESPONSE = {
